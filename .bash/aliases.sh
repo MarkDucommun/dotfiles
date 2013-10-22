@@ -10,4 +10,4 @@ alias got="git"
 alias get="git"
 
 alias be="bundle exec"
-
+alias phpvm="ssh root@local-gf"
