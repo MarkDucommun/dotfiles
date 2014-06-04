@@ -6,15 +6,16 @@
 [core]
   autocrlf = input
   safecrlf = true
-  editor = subl -n -w
+  editor = vim
 [alias]
   st = status
   ci = commit
   br = branch
   co = checkout
   pr = pull --rebase
+  rid = rebase -i develop
   amend = commit --amend
-  initialize = !git init && commit --allow-empty -m 'initial commit'
+  initialize = !git init && git commit --allow-empty -m 'initial commit'
   hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
 [color]
   branch = auto
@@ -33,3 +34,5 @@
   added = yellow
   changed = green
   untracked = cyan
+[credential]
+	helper = osxkeychain
