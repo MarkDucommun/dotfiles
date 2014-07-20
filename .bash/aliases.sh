@@ -9,6 +9,10 @@ alias gco="git checkout"
 alias got="git"
 alias get="git"
 alias branch="echo $(git rev-parse --abbrev-ref HEAD)"
+alias gitsync="~/Google\ Drive/giveforward/devtools/git-tools/sync"
+
+alias ls="ls -G"
+alias ll="ls -G -lhA"
 
 alias be="bundle exec"
 alias phpvm="ssh root@local-gf"
@@ -74,10 +78,10 @@ freshen_db() {
   psql gf_warehouse_test -c 'alter user gfwd with superuser;' -U postgres
   psql gf_uh_test -c 'alter user gfwd with superuser;' -U postgres
 
-  cd ~/unicorn/unicorn-mist
+  cd ~/mist
   be rake db:migrate && RAILS_ENV=test be rake db:migrate
 
-  cd ~/unicorn/unicorn_heart
+  cd ~/heart
   RAILS_ENV=test be rake db:migrate
 }
 
@@ -99,6 +103,9 @@ function setjdk() {
 function srspec() {
   #! /bin/bash
   RSPEC="bundle exec rspec"
+  VERSION=$(cat ~/mist/.ruby-version)
+  GEMSET=$(cat ~/mist/.ruby-gemset)
+  rvm use ${VERSION}@${GEMSET}
 
   # Looking for nailgun
   lsof -i :2113 > /dev/null
