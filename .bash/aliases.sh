@@ -9,7 +9,7 @@ alias gco="git checkout"
 alias got="git"
 alias get="git"
 alias branch="echo $(git rev-parse --abbrev-ref HEAD)"
-alias gitsync="~/Google\ Drive/giveforward/devtools/git-tools/sync"
+alias gitsync="~/Drive/giveforward/devtools/git-tools/sync"
 
 alias ls="ls -G"
 alias ll="ls -G -lhA"
