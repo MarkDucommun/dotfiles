@@ -1,4 +1,4 @@
-source /usr/local/etc/bash_completion.d/git-prompt.sh
+source "$HOME/.bash/git-prompt.sh"
 
 RED="\[\e[1;31m\]"
 GREEN="\[\e[1;32m\]"
