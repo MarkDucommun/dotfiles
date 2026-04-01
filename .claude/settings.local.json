@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew bundle:*)",
+      "Bash(brew install:*)",
+      "Bash(brew list:*)",
+      "Bash(mise install:*)",
+      "Bash(mise ls-remote:*)",
+      "Bash(mise settings:*)",
+      "Bash(mise config:*)",
+      "Bash(mise --help)",
+      "Bash(MISE_PYTHON_FLAVOR=cpython mise install python@3.12.13 2>&1)",
+      "Bash(/Users/markducommun/workspace/dotfiles/mouse-switch/.venv/bin/python3 /Users/markducommun/workspace/dotfiles/mouse-switch/switch_mouse.py --detect)",
+      "Bash(/Users/markducommun/workspace/dotfiles/mouse-switch/.venv/bin/python3 /Users/markducommun/workspace/dotfiles/mouse-switch/switch_mouse.py 2)",
+      "Bash(pkill -f logioptionsplus_agent)",
+      "Bash(/Users/markducommun/workspace/dotfiles/mouse-switch/.venv/bin/python3 -c \"\nimport hid\nall_devs = hid.enumerate\\(\\)\nlogi = [d for d in all_devs if d['vendor_id'] == 0x046D]\nprint\\(f'Total HID devices: {len\\(all_devs\\)}'\\)\nprint\\(f'Logitech devices: {len\\(logi\\)}'\\)\nfor d in logi:\n    print\\(f\\\\\"  {d.get\\('product_string', '?'\\)} PID=0x{d['product_id']:04X} page=0x{d.get\\('usage_page',0\\):04X}\\\\\"\\)\n\")"
+    ]
+  }
+}
