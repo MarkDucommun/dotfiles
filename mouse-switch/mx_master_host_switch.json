@@ -15,7 +15,7 @@
           },
           "to": [
             {
-              "shell_command": "/usr/bin/env python3 ~/workspace/dotfiles/mouse-switch/switch_mouse.py 1"
+              "shell_command": "~/workspace/dotfiles/mouse-switch/SwitchMouse.app/Contents/MacOS/switch_mouse_wrapper 1"
             }
           ]
         },
@@ -30,7 +30,7 @@
           },
           "to": [
             {
-              "shell_command": "/usr/bin/env python3 ~/workspace/dotfiles/mouse-switch/switch_mouse.py 2"
+              "shell_command": "~/workspace/dotfiles/mouse-switch/SwitchMouse.app/Contents/MacOS/switch_mouse_wrapper 2"
             }
           ]
         },
@@ -45,7 +45,7 @@
           },
           "to": [
             {
-              "shell_command": "/usr/bin/env python3 ~/workspace/dotfiles/mouse-switch/switch_mouse.py 3"
+              "shell_command": "~/workspace/dotfiles/mouse-switch/SwitchMouse.app/Contents/MacOS/switch_mouse_wrapper 3"
             }
           ]
         }
