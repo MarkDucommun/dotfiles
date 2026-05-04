@@ -32,42 +32,82 @@ private let BT_DEVICE_INDEX: UInt8 = 0xFF
 private let SW_ID: UInt8 = 0x01
 private let CHANGE_HOST_FEATURE: UInt16 = 0x1814
 
+private func returnName(_ code: IOReturn) -> String {
+    switch code {
+    case kIOReturnSuccess:
+        return "success"
+    case kIOReturnExclusiveAccess:
+        return "exclusive access"
+    case kIOReturnNotPrivileged:
+        return "not privileged"
+    case kIOReturnNotPermitted:
+        return "not permitted"
+    case kIOReturnNotOpen:
+        return "not open"
+    case kIOReturnTimeout:
+        return "timeout"
+    case kIOReturnOffline:
+        return "offline"
+    case kIOReturnNotAttached:
+        return "not attached"
+    case kIOReturnAborted:
+        return "aborted"
+    default:
+        return "0x\(String(UInt32(bitPattern: code), radix: 16, uppercase: true))"
+    }
+}
+
+private func describeReturn(_ code: IOReturn) -> String {
+    "\(code) (\(returnName(code)))"
+}
+
 // MARK: - HID Manager
 
 class HIDDeviceManager {
     static let shared = HIDDeviceManager()
 
-    private let manager: IOHIDManager
-    private var openDevices: [Int32: IOHIDDevice] = [:] // keyed by PID
-
     private init() {
-        manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
-
-        // Match only Logitech devices
-        let matching = [kIOHIDVendorIDKey: LOGITECH_VID] as NSDictionary
-        IOHIDManagerSetDeviceMatching(manager, matching)
-
-        let result = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
-        log("IOHIDManagerOpen: \(result)")
-
-        IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
+        log("HID service scanner ready")
     }
 
     func getDevices() -> [(device: IOHIDDevice, name: String, pid: Int32)] {
-        guard let deviceSet = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> else {
-            log("No devices from manager")
+        guard let matching = IOServiceMatching("IOHIDDevice") else {
+            log("Unable to create IOHIDDevice matching dictionary")
             return []
+        }
+
+        var iterator: io_iterator_t = 0
+        let matchResult = IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator)
+        guard matchResult == kIOReturnSuccess else {
+            log("IOServiceGetMatchingServices failed: \(describeReturn(matchResult))")
+            return []
+        }
+        defer {
+            IOObjectRelease(iterator)
         }
 
         var results: [(IOHIDDevice, String, Int32)] = []
         var seenPIDs: Set<Int32> = []
 
-        for device in deviceSet {
+        while true {
+            let service = IOIteratorNext(iterator)
+            if service == 0 {
+                break
+            }
+            defer {
+                IOObjectRelease(service)
+            }
+
+            guard let device = IOHIDDeviceCreate(kCFAllocatorDefault, service) else {
+                continue
+            }
+
+            let vid = (IOHIDDeviceGetProperty(device, kIOHIDVendorIDKey as CFString) as? NSNumber)?.int32Value ?? 0
             let pid = (IOHIDDeviceGetProperty(device, kIOHIDProductIDKey as CFString) as? NSNumber)?.int32Value ?? 0
             let name = IOHIDDeviceGetProperty(device, kIOHIDProductKey as CFString) as? String ?? "Unknown"
 
-            if KNOWN_PIDS.contains(pid) && !seenPIDs.contains(pid) {
-                log("Manager found: \(name) (PID=0x\(String(pid, radix: 16, uppercase: true)))")
+            if vid == LOGITECH_VID && KNOWN_PIDS.contains(pid) && !seenPIDs.contains(pid) {
+                log("Found: \(name) (PID=0x\(String(pid, radix: 16, uppercase: true)))")
                 results.append((device, name, pid))
                 seenPIDs.insert(pid)
             }
@@ -105,13 +145,20 @@ private func readReport(_ device: IOHIDDevice) -> [UInt8]? {
 func switchDevice(_ device: IOHIDDevice, name: String, toHost host: Int) -> Bool {
     // Try opening the device explicitly first
     let openResult = IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeNone))
-    log("Open \(name): \(openResult)")
+    log("Open \(name): \(describeReturn(openResult))")
+    guard openResult == kIOReturnSuccess else {
+        return false
+    }
+    defer {
+        let closeResult = IOHIDDeviceClose(device, IOOptionBits(kIOHIDOptionsTypeNone))
+        log("Close \(name): \(describeReturn(closeResult))")
+    }
 
     // Query IRoot for ChangeHost feature index
     var kr = sendReport(device, featureIndex: 0x00, functionID: 0x00,
                         UInt8(CHANGE_HOST_FEATURE >> 8), UInt8(CHANGE_HOST_FEATURE & 0xFF))
     if kr != kIOReturnSuccess {
-        log("IRoot query failed on \(name): \(kr)")
+        log("IRoot query failed on \(name): \(describeReturn(kr))")
         return false
     }
 
@@ -128,7 +175,11 @@ func switchDevice(_ device: IOHIDDevice, name: String, toHost host: Int) -> Bool
     // setCurrentHost (function 1), 0-indexed
     kr = sendReport(device, featureIndex: changeHostIdx, functionID: 0x01, UInt8(host - 1))
     if kr != kIOReturnSuccess {
-        log("Switch command failed on \(name): \(kr)")
+        if kr == kIOReturnAborted || kr == kIOReturnOffline || kr == kIOReturnNotAttached {
+            log("Switch command disconnected \(name): \(describeReturn(kr)); treating as switched")
+            return true
+        }
+        log("Switch command failed on \(name): \(describeReturn(kr))")
         return false
     }
 

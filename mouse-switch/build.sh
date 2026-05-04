@@ -26,10 +26,3 @@ fi
 
 echo ""
 echo "Built: $APP_DIR"
-echo ""
-echo "Next steps:"
-echo "  1. Open the app:  open $APP_DIR"
-echo "  2. Add HostSwitcher to Input Monitoring AND Accessibility"
-echo "     (System Settings → Privacy & Security)"
-echo "  3. Restart the app after granting permissions"
-echo "  4. Use Cmd+Opt+1/2/3 or the menu bar icon to switch hosts"

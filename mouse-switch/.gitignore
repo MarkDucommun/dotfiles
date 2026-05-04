@@ -1,4 +1,3 @@
 HostSwitcher.app/Contents/MacOS/HostSwitcher
+HostSwitcher.app/Contents/_CodeSignature/
 hostswitcher.log
-SwitchMouse.app/
-.venv/
