@@ -1,0 +1,6 @@
+[tools]
+bun = "latest"
+node = "24"
+"npm:@anthropic-ai/claude-code" = "latest"
+python = "3.12"
+rust = "latest"
