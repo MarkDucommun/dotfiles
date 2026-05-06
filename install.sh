@@ -7,17 +7,46 @@ MISE_CONFIG="${MISE_CONFIG_DIR}/config.toml"
 MISE_REPO_CONFIG="${DOTFILES_DIR}/mise/config.toml"
 DOCKER_CLI_PLUGINS_DIR="${HOME}/.docker/cli-plugins"
 
+link_file() {
+  local src="$1"
+  local dst="$2"
+  local backup
+
+  mkdir -p "$(dirname "$dst")"
+
+  if [[ -L "$dst" ]]; then
+    if [[ "$(readlink "$dst")" == "$src" ]]; then
+      echo "    ${dst} already linked"
+      return
+    fi
+
+    echo "    Relinking ${dst} -> ${src}"
+    ln -sfn "$src" "$dst"
+    return
+  fi
+
+  if [[ -e "$dst" ]]; then
+    backup="${dst}.backup.$(date +%Y%m%d%H%M%S)"
+    echo "    Existing ${dst} found; moving it to ${backup}"
+    mv "$dst" "$backup"
+  fi
+
+  ln -s "$src" "$dst"
+  echo "    Linked ${dst} -> ${src}"
+}
+
 echo "==> Installing Homebrew packages..."
 brew bundle --file="${DOTFILES_DIR}/Brewfile"
 
+echo "==> Linking shell, prompt, terminal, and git config..."
+link_file "${DOTFILES_DIR}/zshrc" "${HOME}/.zshrc"
+link_file "${DOTFILES_DIR}/starship.toml" "${HOME}/.config/starship.toml"
+link_file "${DOTFILES_DIR}/ghostty.conf" "${HOME}/.config/ghostty/config"
+link_file "${DOTFILES_DIR}/gitconfig" "${HOME}/.gitconfig"
+link_file "${DOTFILES_DIR}/gitignore_global" "${HOME}/.gitignore_global"
+
 echo "==> Linking mise config..."
-mkdir -p "${MISE_CONFIG_DIR}"
-if [[ -e "${MISE_CONFIG}" && ! -L "${MISE_CONFIG}" ]]; then
-  BACKUP="${MISE_CONFIG}.backup.$(date +%Y%m%d%H%M%S)"
-  echo "    Existing mise config found; moving it to ${BACKUP}"
-  mv "${MISE_CONFIG}" "${BACKUP}"
-fi
-ln -sfn "${MISE_REPO_CONFIG}" "${MISE_CONFIG}"
+link_file "${MISE_REPO_CONFIG}" "${MISE_CONFIG}"
 
 echo "==> Installing mise tools..."
 mise install
